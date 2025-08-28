@@ -118,8 +118,8 @@
     <div id="map"></div>
     <div class="legend">
       🚍 Fretado → posição atual<br>
-      🔵 Linha azul → trajeto percorrido<br>
-      🟢 Você → posição atual
+      🟢 Usuário → sua posição<br>
+      Linha azul → trajeto percorrido
     </div>
   </div>
 
@@ -159,38 +159,19 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Ícones
+    // Ícone ônibus
     const busIcon = L.icon({
       iconUrl: 'assets/iconbus.png',
       iconSize: [40, 40],
       iconAnchor: [20, 40]
     });
-    const userIcon = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x-green.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      shadowSize: [41, 41]
-});
-    
 
     let busMarker;
-    let userMarker;
     let watchId = null;
     let path = [];
     let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
+
     const statusMsg = document.getElementById("statusMsg");
-
-    let lastUserPos = null;
-
-    function updateDistance() {
-      if (lastUserPos && busMarker) {
-        const busLatLng = busMarker.getLatLng();
-        const distance = map.distance([lastUserPos.lat, lastUserPos.lng], busLatLng);
-        statusMsg.textContent = `Distância até o fretado: ${Math.round(distance)} metros`;
-      }
-    }
 
     // Atualiza marcador e trilha do fretado
     locationRef.on("value", snapshot => {
@@ -208,33 +189,20 @@
         polyline.setLatLngs(path);
 
         map.setView(latlng, 15);
-        updateDistance();
+        statusMsg.textContent = "";
       } else {
-        if (busMarker) map.removeLayer(busMarker);
-        busMarker = null;
+        if (busMarker) {
+          map.removeLayer(busMarker);
+          busMarker = null;
+        }
         path = [];
         polyline.setLatLngs(path);
         statusMsg.textContent = "Fretado não está transmitindo";
       }
+      updateDistance();
     });
 
-    // Localização do usuário
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        lastUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        userMarker = L.marker([lastUserPos.lat, lastUserPos.lng], { icon: userIcon })
-                      .addTo(map).bindPopup("Você está aqui");
-        updateDistance();
-      });
-
-      navigator.geolocation.watchPosition(pos => {
-        lastUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        if (userMarker) userMarker.setLatLng([lastUserPos.lat, lastUserPos.lng]);
-        updateDistance();
-      });
-    }
-
-    // Botão admin
+    // Botão admin para iniciar/parar rastreamento do fretado
     toggleBtn.addEventListener("click", () => {
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
@@ -258,6 +226,52 @@
         }
       }
     });
+
+    // ---------------------------
+    // Marcador do usuário (emoji 🟢)
+    let userMarker = null;
+    let lastUserPos = null;
+
+    function updateDistance() {
+      if (lastUserPos && busMarker) {
+        const busLatLng = busMarker.getLatLng();
+        const distance = map.distance([lastUserPos.lat, lastUserPos.lng], busLatLng);
+        statusMsg.textContent = `Distância até o fretado: ${Math.round(distance)} metros`;
+      }
+    }
+
+    function addOrUpdateUserMarker(lat, lng) {
+      lastUserPos = { lat, lng };
+
+      if (!userMarker) {
+        userMarker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: '',
+            html: '🟢',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })
+        }).addTo(map).bindPopup("Você está aqui");
+      } else {
+        userMarker.setLatLng([lat, lng]);
+      }
+
+      updateDistance();
+    }
+
+    if (navigator.geolocation) {
+      // Posição inicial
+      navigator.geolocation.getCurrentPosition(pos => {
+        addOrUpdateUserMarker(pos.coords.latitude, pos.coords.longitude);
+      });
+
+      // Atualiza em tempo real
+      navigator.geolocation.watchPosition(pos => {
+        addOrUpdateUserMarker(pos.coords.latitude, pos.coords.longitude);
+      }, err => {
+        console.warn("Erro ao atualizar posição do usuário: ", err);
+      }, { enableHighAccuracy: true, maximumAge: 0 });
+    }
   </script>
 </body>
 </html>
