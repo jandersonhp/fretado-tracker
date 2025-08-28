@@ -4,31 +4,71 @@
   <meta charset="UTF-8">
   <title>Fretado Tracker</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f2f2f2; }
-    header { background:#007bff; color:white; padding:10px 20px; text-align:center; font-size:20px; }
-    #mapContainer { width:95%; max-width:800px; height:60vh; margin:20px auto; border-radius:8px; overflow:hidden; box-shadow:0 0 10px rgba(0,0,0,0.3); position:relative; }
-    #map { width:100%; height:100%; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f2f2f2;
+    }
 
-    /* Botões grandes na lateral inferior direita */
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    #mapContainer {
+      width: 95%;
+      max-width: 800px;
+      height: 60vh;
+      margin: 20px auto;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Botão admin */
+    #toggleTracking {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      display: none; /* aparece apenas para admin */
+    }
+
+    #toggleTracking.active { background: red; }
+
+    /* Botões de foco */
     .controlBtn {
       position: absolute;
-      right: 10px;
       z-index: 1000;
-      padding: 14px 20px;
+      padding: 10px 18px;
       font-size: 16px;
       border: none;
       border-radius: 10px;
       background: #007bff;
       color: white;
       cursor: pointer;
-      margin-bottom: 10px;
-      display: block;
-      text-align: center;
-      width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
-    #btnUser { bottom: 60px; }
-    #btnFretado { bottom: 10px; }
+    #btnUser { bottom: 70px; right: 10px; }
+    #btnFretado { bottom: 10px; right: 10px; }
 
     .legend {
       position: absolute;
@@ -43,15 +83,26 @@
       z-index: 1000;
     }
 
-    footer { text-align:center; font-size:12px; color:#555; margin:20px 0; }
-    #statusMsg { text-align:center; font-size:14px; color:#ff0000; margin-top:5px; }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #555;
+      margin: 20px 0;
+    }
 
-    @media (max-width:480px) {
-      header { font-size:18px; padding:8px 10px; }
-      .controlBtn { padding:12px 16px; font-size:14px; width:140px; }
-      .legend { font-size:12px; padding:5px 8px; }
-      footer { font-size:10px; }
-      #mapContainer { height:50vh; }
+    #statusMsg {
+      text-align: center;
+      font-size: 14px;
+      color: #ff0000;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 480px) {
+      header { font-size: 18px; padding: 8px 10px; }
+      .controlBtn { padding: 8px 14px; font-size: 14px; }
+      .legend { font-size: 12px; padding: 5px 8px; }
+      footer { font-size: 10px; }
+      #mapContainer { height: 50vh; }
     }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -62,6 +113,11 @@
 
   <div id="mapContainer">
     <div id="map"></div>
+
+    <!-- Botão admin -->
+    <button id="toggleTracking">Iniciar Rastreamento</button>
+
+    <!-- Botões de foco -->
     <button id="btnUser" class="controlBtn">Minha posição</button>
     <button id="btnFretado" class="controlBtn">Posição fretado</button>
 
@@ -73,6 +129,7 @@
   </div>
 
   <div id="statusMsg">Fretado não está transmitindo</div>
+
   <footer>© 2025 Janderson Duarte – <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
 
   <!-- Firebase -->
@@ -80,6 +137,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+    // Verifica se é admin
+    const params = new URLSearchParams(window.location.search);
+    const isAdmin = params.get("admin") === "meu123";
+    const toggleBtn = document.getElementById("toggleTracking");
+    if(isAdmin) toggleBtn.style.display = "block";
+
+    // Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCshgPieBQ1zXGLfH_zp0nS_ab25HSTCto",
       authDomain: "fretado-tracker.firebaseapp.com",
@@ -93,37 +157,44 @@
     const db = firebase.database();
     const locationRef = db.ref("tracker/location");
 
+    // Mapa
     const map = L.map('map').setView([-23.55, -46.63], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
-    const busIcon = L.icon({ iconUrl: 'assets/iconbus.png', iconSize:[40,40], iconAnchor:[20,40] });
+    // Ícone fretado
+    const busIcon = L.icon({ iconUrl:'assets/iconbus.png', iconSize:[40,40], iconAnchor:[20,40] });
+
     let busMarker = null;
     let path = [];
-    let polyline = L.polyline(path, { color:'blue' }).addTo(map);
+    let polyline = L.polyline(path,{ color:'blue' }).addTo(map);
 
     let userMarker = null;
     let lastUserPos = null;
 
     function updateDistance() {
       if(lastUserPos && busMarker){
-        const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busMarker.getLatLng());
+        const busLatLng = busMarker.getLatLng();
+        const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng);
         document.getElementById("statusMsg").textContent = `Distância do fretado: ${Math.round(distance)} metros`;
       }
     }
 
     function addOrUpdateUserMarker(lat,lng){
-      lastUserPos = {lat,lng};
+      lastUserPos = { lat,lng };
       if(!userMarker){
-        userMarker = L.marker([lat,lng], { icon: L.divIcon({ className:'', html:'🟢', iconSize:[20,20], iconAnchor:[10,10] }) }).addTo(map).bindPopup("Você está aqui");
+        userMarker = L.marker([lat,lng], {
+          icon: L.divIcon({ className:'', html:'🟢', iconSize:[20,20], iconAnchor:[10,10] })
+        }).addTo(map).bindPopup("Você está aqui");
       } else { userMarker.setLatLng([lat,lng]); }
       updateDistance();
     }
 
-    locationRef.on("value", snapshot=>{
+    // Atualiza fretado
+    locationRef.on("value", snapshot => {
       const data = snapshot.val();
       if(data){
-        const latlng=[data.lat,data.lng];
-        if(!busMarker) busMarker=L.marker(latlng,{icon:busIcon}).addTo(map);
+        const latlng = [data.lat,data.lng];
+        if(!busMarker) busMarker = L.marker(latlng,{icon:busIcon}).addTo(map);
         else busMarker.setLatLng(latlng);
 
         path.push(latlng);
@@ -132,17 +203,44 @@
       }
     });
 
+    // Botão admin
+    toggleBtn.addEventListener("click", () => {
+      if(watchId){
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        locationRef.remove();
+        path = [];
+        polyline.setLatLngs(path);
+        toggleBtn.textContent = "Iniciar Rastreamento";
+        toggleBtn.classList.remove("active");
+      } else {
+        if(navigator.geolocation){
+          watchId = navigator.geolocation.watchPosition(pos => {
+            locationRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          });
+          toggleBtn.textContent = "Parar Rastreamento";
+          toggleBtn.classList.add("active");
+        } else { alert("Geolocalização não suportada!"); }
+      }
+    });
+
+    let watchId = null;
+
+    // Geolocalização usuário
     if(navigator.geolocation){
       navigator.geolocation.getCurrentPosition(pos => addOrUpdateUserMarker(pos.coords.latitude,pos.coords.longitude));
-      navigator.geolocation.watchPosition(pos => addOrUpdateUserMarker(pos.coords.latitude,pos.coords.longitude), err=>console.warn(err), { enableHighAccuracy:true, maximumAge:0 });
+      navigator.geolocation.watchPosition(pos => addOrUpdateUserMarker(pos.coords.latitude,pos.coords.longitude),
+        err => console.warn(err), { enableHighAccuracy:true, maximumAge:0 });
     }
 
-    document.getElementById("btnUser").addEventListener("click", ()=>{
-      if(userMarker) map.setView(userMarker.getLatLng(), 15);
+    // Botões foco
+    document.getElementById("btnUser").addEventListener("click", () => {
+      if(userMarker) map.setView(userMarker.getLatLng(),15);
     });
-    document.getElementById("btnFretado").addEventListener("click", ()=>{
-      if(busMarker) map.setView(busMarker.getLatLng(), 15);
+    document.getElementById("btnFretado").addEventListener("click", () => {
+      if(busMarker) map.setView(busMarker.getLatLng(),15);
     });
+
   </script>
 </body>
 </html>
