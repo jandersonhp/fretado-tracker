@@ -20,9 +20,9 @@
     }
 
     #mapContainer {
-      width: 90%;
+      width: 95%;
       max-width: 800px;
-      height: 500px;
+      height: 60vh;
       margin: 20px auto;
       border-radius: 8px;
       overflow: hidden;
@@ -40,8 +40,8 @@
       top: 10px;
       left: 10px;
       z-index: 1000;
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 8px 14px;
+      font-size: 14px;
       border: none;
       border-radius: 8px;
       background: #007bff;
@@ -59,7 +59,7 @@
       bottom: 10px;
       left: 10px;
       background: white;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 8px;
       box-shadow: 0 0 6px rgba(0,0,0,0.3);
       font-size: 14px;
@@ -79,6 +79,32 @@
       color: #ff0000;
       margin-top: 5px;
     }
+
+    /* Responsividade */
+    @media (max-width: 480px) {
+      header {
+        font-size: 18px;
+        padding: 8px 10px;
+      }
+
+      #toggleTracking {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .legend {
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+
+      footer {
+        font-size: 10px;
+      }
+
+      #mapContainer {
+        height: 50vh;
+      }
+    }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -95,7 +121,7 @@
     </div>
   </div>
 
-  <div id="statusMsg"></div>
+  <div id="statusMsg">Fretado não está transmitindo</div>
 
   <footer>© 2025 Janderson – <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
 
@@ -106,7 +132,7 @@
   <script>
     // Código secreto para admin
     const params = new URLSearchParams(window.location.search);
-    const isAdmin = params.get("admin") === "meu123"; // <-- seu código secreto
+    const isAdmin = params.get("admin") === "meu123";
     const toggleBtn = document.getElementById("toggleTracking");
     if (isAdmin) toggleBtn.style.display = "block";
 
@@ -143,7 +169,6 @@
     let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
 
     const statusMsg = document.getElementById("statusMsg");
-    statusMsg.textContent = "Fretado não está transmitindo";
 
     // Atualiza marcador e trilha
     locationRef.on("value", snapshot => {
@@ -167,7 +192,7 @@
         polyline.setLatLngs(path);
 
         map.setView(latlng, 15);
-        statusMsg.textContent = ""; // limpa mensagem
+        statusMsg.textContent = "";
       } else {
         if (busMarker) {
           map.removeLayer(busMarker);
