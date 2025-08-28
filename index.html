@@ -68,26 +68,38 @@
 
     let busMarker;
     let watchId = null;
+    let path = []; // array para armazenar pontos da trilha
+    let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
 
-    // Atualiza marcador no mapa quando houver mudança no Firebase
+    // Atualiza marcador e trilha no mapa
     locationRef.on("value", snapshot => {
       const data = snapshot.val();
       if (data) {
+        const latlng = [data.lat, data.lng];
+
+        // Atualiza marcador
         if (!busMarker) {
-          busMarker = L.marker([data.lat, data.lng], { icon: busIcon })
+          busMarker = L.marker(latlng, { icon: busIcon })
             .addTo(map)
             .bindPopup("🚍 Fretado")
             .openPopup();
         } else {
-          busMarker.setLatLng([data.lat, data.lng]);
+          busMarker.setLatLng(latlng);
           busMarker.openPopup();
         }
-        map.setView([data.lat, data.lng], 15);
+
+        // Adiciona ponto à trilha
+        path.push(latlng);
+        polyline.setLatLngs(path);
+
+        map.setView(latlng, 15);
       } else {
         if (busMarker) {
           map.removeLayer(busMarker);
           busMarker = null;
         }
+        path = [];
+        polyline.setLatLngs(path);
       }
     });
 
@@ -97,6 +109,8 @@
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
         locationRef.remove();
+        path = [];
+        polyline.setLatLngs(path);
         toggleBtn.textContent = "Iniciar Rastreamento";
         toggleBtn.classList.remove("active");
       } else {
