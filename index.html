@@ -123,7 +123,7 @@
 
   <div id="statusMsg">Fretado não está transmitindo</div>
 
-  <footer>© 2025 Janderson – <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
+  <footer>© 2025 Janderson Duarte– <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -159,7 +159,7 @@
 
     // Ícone ônibus
     const busIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61205.png',
+      iconUrl: 'assets/iconbus.png',
       iconSize: [40, 40]
     });
 
@@ -180,11 +180,10 @@
         if (!busMarker) {
           busMarker = L.marker(latlng, { icon: busIcon })
             .addTo(map)
-            .bindPopup("🚍 Fretado")
-            .openPopup();
+
         } else {
           busMarker.setLatLng(latlng);
-          busMarker.openPopup();
+
         }
 
         // Trilha
