@@ -1,111 +1,109 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rastreamento do Fretado</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <meta charset="UTF-8">
+  <title>Fretado Tracker</title>
   <style>
-    body, html { margin:0; padding:0; height:100%; }
     #map { height: 90vh; width: 100%; }
-    #controls {
-      text-align: center;
-      padding: 10px;
-      background: #f8f9fa;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    button {
+    #toggleBtn {
+      margin: 10px;
       padding: 10px 20px;
       font-size: 16px;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
       background: #007bff;
       color: white;
+      cursor: pointer;
     }
-    button.stop {
-      background: #dc3545;
+    #toggleBtn.active {
+      background: red;
     }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-  <div id="controls">
-    <button id="toggleBtn">🚍 Ativar transmissão</button>
-  </div>
+  <button id="toggleBtn">Iniciar Rastreamento</button>
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
   <script>
-    // Inicializa o mapa
-    var map = L.map('map').setView([-23.55, -46.63], 13);
+    // Configuração do Firebase (seu projeto)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCshgPieBQ1zXGLfH_zp0nS_ab25HSTCto",
+      authDomain: "fretado-tracker.firebaseapp.com",
+      databaseURL: "https://fretado-tracker-default-rtdb.firebaseio.com",
+      projectId: "fretado-tracker",
+      storageBucket: "fretado-tracker.firebasestorage.app",
+      messagingSenderId: "515634597476",
+      appId: "1:515634597476:web:5ee62c9770474898529971"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Inicia mapa
+    const map = L.map('map').setView([-23.55, -46.63], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
+      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Ícone de ônibus
-    var busIcon = L.icon({
-      iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61205.png",
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -35]
+    // Ícone do ônibus
+    const busIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61205.png',
+      iconSize: [40, 40]
     });
 
-    var marker = null;
-    var watchId = null;
-    var transmitting = false;
+    let busMarker;
+    let watchId = null;
+    const locationRef = db.ref("tracker/location");
 
-    // Botão de ativar/desativar
-    document.getElementById("toggleBtn").addEventListener("click", function() {
-      if (!transmitting) {
-        startTransmission();
+    // Atualiza mapa quando houver mudança no Firebase
+    locationRef.on("value", snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        if (!busMarker) {
+          busMarker = L.marker([data.lat, data.lng], { icon: busIcon }).addTo(map);
+        } else {
+          busMarker.setLatLng([data.lat, data.lng]);
+        }
+        map.setView([data.lat, data.lng], 15);
       } else {
-        stopTransmission();
+        if (busMarker) {
+          map.removeLayer(busMarker);
+          busMarker = null;
+        }
       }
     });
 
-    function startTransmission() {
-      transmitting = true;
-      document.getElementById("toggleBtn").innerText = "⛔ Parar transmissão";
-      document.getElementById("toggleBtn").classList.add("stop");
-
-      if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(function(pos) {
-          var lat = pos.coords.latitude;
-          var lon = pos.coords.longitude;
-
-          if (!marker) {
-            marker = L.marker([lat, lon], {icon: busIcon})
-                      .addTo(map)
-                      .bindPopup("🚌 Fretado em movimento!")
-                      .openPopup();
-          } else {
-            marker.setLatLng([lat, lon]);
-          }
-          map.setView([lat, lon], 16);
-        }, function(err) {
-          alert("Erro ao pegar localização: " + err.message);
-        }, { enableHighAccuracy: true });
-      }
-    }
-
-    function stopTransmission() {
-      transmitting = false;
-      document.getElementById("toggleBtn").innerText = "🚍 Ativar transmissão";
-      document.getElementById("toggleBtn").classList.remove("stop");
-
-      if (watchId !== null) {
+    // Botão liga/desliga
+    const toggleBtn = document.getElementById("toggleBtn");
+    toggleBtn.addEventListener("click", () => {
+      if (watchId) {
+        // Parar rastreamento
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
+        locationRef.remove(); // Apaga do Firebase
+        toggleBtn.textContent = "Iniciar Rastreamento";
+        toggleBtn.classList.remove("active");
+      } else {
+        // Iniciar rastreamento
+        if (navigator.geolocation) {
+          watchId = navigator.geolocation.watchPosition(pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            locationRef.set({ lat, lng });
+          });
+          toggleBtn.textContent = "Parar Rastreamento";
+          toggleBtn.classList.add("active");
+        } else {
+          alert("Geolocalização não suportada!");
+        }
       }
-
-      if (marker) {
-        map.removeLayer(marker);
-        marker = null;
-      }
-    }
+    });
   </script>
 </body>
 </html>
