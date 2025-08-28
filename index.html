@@ -46,4 +46,66 @@
     }).addTo(map);
 
     // Ícone de ônibus
-    var busIcon = L
+    var busIcon = L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61205.png",
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -35]
+    });
+
+    var marker = null;
+    var watchId = null;
+    var transmitting = false;
+
+    // Botão de ativar/desativar
+    document.getElementById("toggleBtn").addEventListener("click", function() {
+      if (!transmitting) {
+        startTransmission();
+      } else {
+        stopTransmission();
+      }
+    });
+
+    function startTransmission() {
+      transmitting = true;
+      document.getElementById("toggleBtn").innerText = "⛔ Parar transmissão";
+      document.getElementById("toggleBtn").classList.add("stop");
+
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(function(pos) {
+          var lat = pos.coords.latitude;
+          var lon = pos.coords.longitude;
+
+          if (!marker) {
+            marker = L.marker([lat, lon], {icon: busIcon})
+                      .addTo(map)
+                      .bindPopup("🚌 Fretado em movimento!")
+                      .openPopup();
+          } else {
+            marker.setLatLng([lat, lon]);
+          }
+          map.setView([lat, lon], 16);
+        }, function(err) {
+          alert("Erro ao pegar localização: " + err.message);
+        }, { enableHighAccuracy: true });
+      }
+    }
+
+    function stopTransmission() {
+      transmitting = false;
+      document.getElementById("toggleBtn").innerText = "🚍 Ativar transmissão";
+      document.getElementById("toggleBtn").classList.remove("stop");
+
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+
+      if (marker) {
+        map.removeLayer(marker);
+        marker = null;
+      }
+    }
+  </script>
+</body>
+</html>
