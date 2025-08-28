@@ -35,23 +35,34 @@
       height: 100%;
     }
 
-    #toggleTracking {
+    .controlBtn {
       position: absolute;
       top: 10px;
       left: 10px;
       z-index: 1000;
-      padding: 8px 14px;
-      font-size: 14px;
+      padding: 6px 12px;
+      font-size: 12px;
       border: none;
       border-radius: 8px;
       background: #007bff;
       color: white;
       cursor: pointer;
-      display: none;
+      margin-right: 5px;
     }
 
-    #toggleTracking.active {
+    .controlBtn.active {
       background: red;
+    }
+
+    #btnUser {
+      left: auto;
+      right: 10px;
+    }
+
+    #btnFretado {
+      top: 40px;
+      left: auto;
+      right: 10px;
     }
 
     .legend {
@@ -81,30 +92,12 @@
       margin-top: 5px;
     }
 
-    /* Responsividade */
     @media (max-width: 480px) {
-      header {
-        font-size: 18px;
-        padding: 8px 10px;
-      }
-
-      #toggleTracking {
-        padding: 6px 12px;
-        font-size: 12px;
-      }
-
-      .legend {
-        font-size: 12px;
-        padding: 5px 8px;
-      }
-
-      footer {
-        font-size: 10px;
-      }
-
-      #mapContainer {
-        height: 50vh;
-      }
+      header { font-size: 18px; padding: 8px 10px; }
+      .controlBtn { padding: 4px 8px; font-size: 10px; }
+      .legend { font-size: 12px; padding: 5px 8px; }
+      footer { font-size: 10px; }
+      #mapContainer { height: 50vh; }
     }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -114,17 +107,17 @@
   <header>📍 Fretado Tracker – Acompanhe seu fretado</header>
 
   <div id="mapContainer">
-    <button id="toggleTracking">Iniciar Rastreamento</button>
+    <button id="btnFretado" class="controlBtn">Focar no fretado</button>
+    <button id="btnUser" class="controlBtn">Focar em você</button>
     <div id="map"></div>
     <div class="legend">
-      🚍 Fretado → posição atual<br>
+      🚌 Fretado → posição atual<br>
       🟢 Usuário → sua posição<br>
       🔵 Linha azul → trajeto percorrido
     </div>
   </div>
 
   <div id="statusMsg">Fretado não está transmitindo</div>
-
   <footer>© 2025 Janderson Duarte – <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
 
   <!-- Firebase -->
@@ -132,13 +125,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    // Código secreto para admin
-    const params = new URLSearchParams(window.location.search);
-    const isAdmin = params.get("admin") === "meu123";
-    const toggleBtn = document.getElementById("toggleTracking");
-    if (isAdmin) toggleBtn.style.display = "block";
-
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCshgPieBQ1zXGLfH_zp0nS_ab25HSTCto",
       authDomain: "fretado-tracker.firebaseapp.com",
@@ -148,86 +134,20 @@
       messagingSenderId: "515634597476",
       appId: "1:515634597476:web:5ee62c9770474898529971"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const locationRef = db.ref("tracker/location");
 
     // Mapa
     const map = L.map('map').setView([-23.55, -46.63], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-    // Ícone ônibus
-    const busIcon = L.icon({
-      iconUrl: 'assets/iconbus.png',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40]
-    });
-
-    let busMarker;
-    let watchId = null;
+    // Marcadores e trilha
+    const busIcon = L.icon({ iconUrl: 'assets/iconbus.png', iconSize: [40, 40], iconAnchor: [20, 40] });
+    let busMarker = null;
     let path = [];
     let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
 
-    const statusMsg = document.getElementById("statusMsg");
-
-    // Atualiza marcador e trilha do fretado
-    locationRef.on("value", snapshot => {
-      const data = snapshot.val();
-      if (data) {
-        const latlng = [data.lat, data.lng];
-
-        if (!busMarker) {
-          busMarker = L.marker(latlng, { icon: busIcon }).addTo(map);
-        } else {
-          busMarker.setLatLng(latlng);
-        }
-
-        path.push(latlng);
-        polyline.setLatLngs(path);
-
-        map.setView(latlng, 15);
-        statusMsg.textContent = "";
-      } else {
-        if (busMarker) {
-          map.removeLayer(busMarker);
-          busMarker = null;
-        }
-        path = [];
-        polyline.setLatLngs(path);
-        statusMsg.textContent = "Fretado não está transmitindo";
-      }
-      updateDistance();
-    });
-
-    // Botão admin para iniciar/parar rastreamento do fretado
-    toggleBtn.addEventListener("click", () => {
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-        locationRef.remove();
-        path = [];
-        polyline.setLatLngs(path);
-        toggleBtn.textContent = "Iniciar Rastreamento";
-        toggleBtn.classList.remove("active");
-      } else {
-        if (navigator.geolocation) {
-          watchId = navigator.geolocation.watchPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            locationRef.set({ lat, lng });
-          });
-          toggleBtn.textContent = "Parar Rastreamento";
-          toggleBtn.classList.add("active");
-        } else {
-          alert("Geolocalização não suportada!");
-        }
-      }
-    });
-
-  
     let userMarker = null;
     let lastUserPos = null;
 
@@ -235,42 +155,45 @@
       if (lastUserPos && busMarker) {
         const busLatLng = busMarker.getLatLng();
         const distance = map.distance([lastUserPos.lat, lastUserPos.lng], busLatLng);
-        statusMsg.textContent = `Distância do fretado: ${Math.round(distance)} metros`;
+        document.getElementById("statusMsg").textContent = `Distância do fretado: ${Math.round(distance)} metros`;
       }
     }
 
     function addOrUpdateUserMarker(lat, lng) {
       lastUserPos = { lat, lng };
-
       if (!userMarker) {
-        userMarker = L.marker([lat, lng], {
-          icon: L.divIcon({
-            className: '',
-            html: '🟢',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-          })
-        }).addTo(map).bindPopup("Você está aqui");
-      } else {
-        userMarker.setLatLng([lat, lng]);
-      }
-
+        userMarker = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '🟢', iconSize: [20,20], iconAnchor: [10,10] }) }).addTo(map).bindPopup("Você está aqui");
+      } else { userMarker.setLatLng([lat,lng]); }
       updateDistance();
     }
 
-    if (navigator.geolocation) {
-      // Posição inicial
-      navigator.geolocation.getCurrentPosition(pos => {
-        addOrUpdateUserMarker(pos.coords.latitude, pos.coords.longitude);
-      });
+    // Atualiza fretado
+    locationRef.on("value", snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        const latlng = [data.lat, data.lng];
+        if (!busMarker) busMarker = L.marker(latlng, { icon: busIcon }).addTo(map);
+        else busMarker.setLatLng(latlng);
 
-      // Atualiza em tempo real
-      navigator.geolocation.watchPosition(pos => {
-        addOrUpdateUserMarker(pos.coords.latitude, pos.coords.longitude);
-      }, err => {
-        console.warn("Erro ao atualizar posição do usuário: ", err);
-      }, { enableHighAccuracy: true, maximumAge: 0 });
+        path.push(latlng);
+        polyline.setLatLngs(path);
+        updateDistance();
+      }
+    });
+
+    // Geolocalização do usuário
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => addOrUpdateUserMarker(pos.coords.latitude, pos.coords.longitude));
+      navigator.geolocation.watchPosition(pos => addOrUpdateUserMarker(pos.coords.latitude, pos.coords.longitude), err => console.warn(err), { enableHighAccuracy:true, maximumAge:0 });
     }
+
+    // Botões de foco
+    document.getElementById("btnFretado").addEventListener("click", () => {
+      if(busMarker) map.setView(busMarker.getLatLng(), 15);
+    });
+    document.getElementById("btnUser").addEventListener("click", () => {
+      if(userMarker) map.setView(userMarker.getLatLng(), 15);
+    });
   </script>
 </body>
 </html>
