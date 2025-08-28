@@ -14,6 +14,7 @@
       background: #007bff;
       color: white;
       cursor: pointer;
+      display: none; /* por padrão escondido */
     }
     #toggleTracking.active {
       background: red;
@@ -23,7 +24,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-  <button id="toggleTracking" style="display:none;">Iniciar Rastreamento</button>
+  <button id="toggleTracking">Iniciar Rastreamento</button>
   <div id="map"></div>
 
   <!-- Firebase -->
@@ -33,10 +34,10 @@
   <script>
     // Checa se o link tem ?admin=meu123
     const params = new URLSearchParams(window.location.search);
-    const isAdmin = params.get("admin") === "meu123"; // <--- seu código secreto
+    const isAdmin = params.get("admin") === "meu123"; // <-- seu código secreto
 
     const toggleBtn = document.getElementById("toggleTracking");
-    if (isAdmin) toggleBtn.style.display = "block";
+    if (isAdmin) toggleBtn.style.display = "block"; // só mostra botão pra admin
 
     // Firebase config
     const firebaseConfig = {
