@@ -5,7 +5,7 @@
   <title>Fretado Tracker</title>
   <style>
     #map { height: 90vh; width: 100%; }
-    #toggleBtn {
+    #toggleTracking {
       margin: 10px;
       padding: 10px 20px;
       font-size: 16px;
@@ -15,7 +15,7 @@
       color: white;
       cursor: pointer;
     }
-    #toggleBtn.active {
+    #toggleTracking.active {
       background: red;
     }
   </style>
@@ -23,7 +23,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-  <button id="toggleBtn">Iniciar Rastreamento</button>
+  <button id="toggleTracking" style="display:none;">Iniciar Rastreamento</button>
   <div id="map"></div>
 
   <!-- Firebase -->
@@ -31,7 +31,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    // Configuração do Firebase (seu projeto)
+    // Checa se o link tem ?admin=meu123
+    const params = new URLSearchParams(window.location.search);
+    const isAdmin = params.get("admin") === "meu123"; // <--- seu código secreto
+
+    const toggleBtn = document.getElementById("toggleTracking");
+    if (isAdmin) toggleBtn.style.display = "block";
+
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCshgPieBQ1zXGLfH_zp0nS_ab25HSTCto",
       authDomain: "fretado-tracker.firebaseapp.com",
@@ -44,14 +51,15 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const locationRef = db.ref("tracker/location");
 
-    // Inicia mapa
+    // Mapa
     const map = L.map('map').setView([-23.55, -46.63], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Ícone do ônibus
+    // Ícone ônibus
     const busIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61205.png',
       iconSize: [40, 40]
@@ -59,16 +67,19 @@
 
     let busMarker;
     let watchId = null;
-    const locationRef = db.ref("tracker/location");
 
-    // Atualiza mapa quando houver mudança no Firebase
+    // Atualiza marcador no mapa quando houver mudança no Firebase
     locationRef.on("value", snapshot => {
       const data = snapshot.val();
       if (data) {
         if (!busMarker) {
-          busMarker = L.marker([data.lat, data.lng], { icon: busIcon }).addTo(map);
+          busMarker = L.marker([data.lat, data.lng], { icon: busIcon })
+            .addTo(map)
+            .bindPopup("🚍 Fretado")
+            .openPopup();
         } else {
           busMarker.setLatLng([data.lat, data.lng]);
+          busMarker.openPopup();
         }
         map.setView([data.lat, data.lng], 15);
       } else {
@@ -79,18 +90,15 @@
       }
     });
 
-    // Botão liga/desliga
-    const toggleBtn = document.getElementById("toggleBtn");
+    // Botão liga/desliga rastreamento
     toggleBtn.addEventListener("click", () => {
       if (watchId) {
-        // Parar rastreamento
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
-        locationRef.remove(); // Apaga do Firebase
+        locationRef.remove();
         toggleBtn.textContent = "Iniciar Rastreamento";
         toggleBtn.classList.remove("active");
       } else {
-        // Iniciar rastreamento
         if (navigator.geolocation) {
           watchId = navigator.geolocation.watchPosition(pos => {
             const lat = pos.coords.latitude;
