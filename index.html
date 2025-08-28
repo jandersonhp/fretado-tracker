@@ -64,6 +64,7 @@
       box-shadow: 0 0 6px rgba(0,0,0,0.3);
       font-size: 14px;
       line-height: 1.5;
+      z-index: 1000;
     }
 
     footer {
@@ -117,13 +118,14 @@
     <div id="map"></div>
     <div class="legend">
       🚍 Fretado → posição atual<br>
-      Linha azul → trajeto percorrido
+      🔵 Linha azul → trajeto percorrido<br>
+      🟢 Você → posição atual
     </div>
   </div>
 
   <div id="statusMsg">Fretado não está transmitindo</div>
 
-  <footer>© 2025 Janderson Duarte– <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
+  <footer>© 2025 Janderson Duarte – <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -157,51 +159,76 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Ícone ônibus
+    // Ícones
     const busIcon = L.icon({
       iconUrl: 'assets/iconbus.png',
-      iconSize: [40, 40]
+      iconSize: [40, 40],
+      iconAnchor: [20, 40]
+    });
+    const userIcon = L.icon({
+      iconUrl: 'assets/user.png', // opcional: criar ícone próprio
+      iconSize: [30, 30],
+      iconAnchor: [15, 30]
     });
 
     let busMarker;
+    let userMarker;
     let watchId = null;
     let path = [];
     let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
-
     const statusMsg = document.getElementById("statusMsg");
 
-    // Atualiza marcador e trilha
+    let lastUserPos = null;
+
+    function updateDistance() {
+      if (lastUserPos && busMarker) {
+        const busLatLng = busMarker.getLatLng();
+        const distance = map.distance([lastUserPos.lat, lastUserPos.lng], busLatLng);
+        statusMsg.textContent = `Distância até o fretado: ${Math.round(distance)} metros`;
+      }
+    }
+
+    // Atualiza marcador e trilha do fretado
     locationRef.on("value", snapshot => {
       const data = snapshot.val();
       if (data) {
         const latlng = [data.lat, data.lng];
 
-        // Marcador
         if (!busMarker) {
-          busMarker = L.marker(latlng, { icon: busIcon })
-            .addTo(map)
-
+          busMarker = L.marker(latlng, { icon: busIcon }).addTo(map);
         } else {
           busMarker.setLatLng(latlng);
-
         }
 
-        // Trilha
         path.push(latlng);
         polyline.setLatLngs(path);
 
         map.setView(latlng, 15);
-        statusMsg.textContent = "";
+        updateDistance();
       } else {
-        if (busMarker) {
-          map.removeLayer(busMarker);
-          busMarker = null;
-        }
+        if (busMarker) map.removeLayer(busMarker);
+        busMarker = null;
         path = [];
         polyline.setLatLngs(path);
         statusMsg.textContent = "Fretado não está transmitindo";
       }
     });
+
+    // Localização do usuário
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        lastUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        userMarker = L.marker([lastUserPos.lat, lastUserPos.lng], { icon: userIcon })
+                      .addTo(map).bindPopup("Você está aqui");
+        updateDistance();
+      });
+
+      navigator.geolocation.watchPosition(pos => {
+        lastUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (userMarker) userMarker.setLatLng([lastUserPos.lat, lastUserPos.lng]);
+        updateDistance();
+      });
+    }
 
     // Botão admin
     toggleBtn.addEventListener("click", () => {
