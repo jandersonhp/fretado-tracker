@@ -3,56 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Localização em tempo real</title>
+  <title>Rastreamento do Fretado</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
-    #map { height: 100vh; width: 100%; }
+    body, html { margin:0; padding:0; height:100%; }
+    #map { height: 90vh; width: 100%; }
+    #controls {
+      text-align: center;
+      padding: 10px;
+      background: #f8f9fa;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+    }
+    button.stop {
+      background: #dc3545;
+    }
   </style>
 </head>
 <body>
+  <div id="controls">
+    <button id="toggleBtn">🚍 Ativar transmissão</button>
+  </div>
   <div id="map"></div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Inicializa o mapa no Brasil
-    var map = L.map('map').setView([-23.55, -46.63], 13); // SP por padrão
-
-    // Adiciona tiles do OpenStreetMap
+    // Inicializa o mapa
+    var map = L.map('map').setView([-23.55, -46.63], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+      attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    // Cria marcador vazio
-    var marker = L.marker([-23.55, -46.63]).addTo(map)
-      .bindPopup("Você está aqui!").openPopup();
-
-    // Atualiza posição em tempo real
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        function(pos) {
-          var lat = pos.coords.latitude;
-          var lon = pos.coords.longitude;
-          var accuracy = pos.coords.accuracy;
-
-          // Move o marcador
-          marker.setLatLng([lat, lon])
-                .setPopupContent("📍 Minha posição<br>Lat: " + lat.toFixed(5) + "<br>Lon: " + lon.toFixed(5))
-                .openPopup();
-
-          // Centraliza o mapa na tua posição
-          map.setView([lat, lon], 16);
-        },
-        function(err) {
-          alert("Erro ao pegar localização: " + err.message);
-        },
-        { enableHighAccuracy: true }
-      );
-    } else {
-      alert("Seu navegador não suporta geolocalização.");
-    }
-  </script>
-</body>
-</html>
+    // Ícone de ônibus
+    var busIcon = L
