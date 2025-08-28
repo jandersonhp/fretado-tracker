@@ -119,7 +119,7 @@
     <div class="legend">
       🚍 Fretado → posição atual<br>
       🟢 Usuário → sua posição<br>
-      Linha azul → trajeto percorrido
+      🔵 Linha azul → trajeto percorrido
     </div>
   </div>
 
@@ -227,8 +227,7 @@
       }
     });
 
-    // ---------------------------
-    // Marcador do usuário (emoji 🟢)
+  
     let userMarker = null;
     let lastUserPos = null;
 
@@ -236,7 +235,7 @@
       if (lastUserPos && busMarker) {
         const busLatLng = busMarker.getLatLng();
         const distance = map.distance([lastUserPos.lat, lastUserPos.lng], busLatLng);
-        statusMsg.textContent = `Distância até o fretado: ${Math.round(distance)} metros`;
+        statusMsg.textContent = `Distância do fretado: ${Math.round(distance)} metros`;
       }
     }
 
