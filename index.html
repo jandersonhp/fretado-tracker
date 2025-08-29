@@ -131,7 +131,18 @@
   <div id="statusMsg">Fretado não está transmitindo</div>
 
   <footer>© 2025 Janderson Duarte – <a href="https://github.com/jandersonhp/fretado-tracker" target="_blank">GitHub</a></footer>
-
+      <div id="onlineCounter" style="
+  position:absolute; 
+  top: 60px; 
+  left:10px; 
+  background:white; 
+  padding:6px 10px; 
+  border-radius:8px; 
+  box-shadow:0 0 6px rgba(0,0,0,0.3); 
+  font-size:14px; 
+  display:none;">
+  👀 0 pessoas online
+    </div>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -155,6 +166,29 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const usersOnlineRef = db.ref("usersOnline");
+
+// Se a página é admin, mostra o contador
+const onlineCounterEl = document.getElementById("onlineCounter");
+if (isAdmin) onlineCounterEl.style.display = "block";
+
+// Criar uma entrada única para esse visitante
+const myConnection = usersOnlineRef.push(true);
+
+// Quando sair, remover
+myConnection.onDisconnect().remove();
+
+// Atualizar contador em tempo real (só admin vê)
+usersOnlineRef.on("value", snapshot => {
+  let count = 0;
+  if (snapshot.exists()) {
+    count = Object.keys(snapshot.val()).length;
+  }
+  if (isAdmin && onlineCounterEl) {
+    onlineCounterEl.style.display = "block"; // garante visível
+    onlineCounterEl.textContent = `👀 ${count} pessoas online`;
+  }
+});
     const locationRef = db.ref("tracker/location");
 
     // Mapa
