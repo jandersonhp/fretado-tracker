@@ -78,7 +78,7 @@
       padding: 6px 10px;
       border-radius: 8px;
       box-shadow: 0 0 6px rgba(0,0,0,0.3);
-      font-size: 14px;
+      font-size: 23px;
       line-height: 1.5;
       z-index: 1000;
     }
@@ -97,13 +97,6 @@
       margin-top: 5px;
     }
 
-    @media (max-width: 480px) {
-      header { font-size: 18px; padding: 8px 10px; }
-      .controlBtn { padding: 8px 14px; font-size: 14px; }
-      .legend { font-size: 12px; padding: 5px 8px; }
-      footer { font-size: 10px; }
-      #mapContainer { height: 50vh; }
-    }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -122,8 +115,8 @@
     <button id="btnFretado" class="controlBtn">Posição do Fretado</button>
 
     <div class="legend">
-      <img src="assets/bus-stop.png" width="20" height="20"> Fretado → Posição Atual<br>
-      <img src="assets/placeholder.png" width="20" height="20"> Usuário → Sua Posição<br>
+      <img src="assets/bus-stop.png" width="35" height="35"> Fretado → Posição Atual<br>
+      <img src="assets/placeholder.png" width="35" height="35"> Usuário → Sua Posição<br>
       🔵 Linha azul → Trajeto Percorrido
     </div>
   </div>
@@ -170,7 +163,7 @@
 
 // Se a página é admin, mostra o contador
 const onlineCounterEl = document.getElementById("onlineCounter");
-if (isAdmin) onlineCounterEl.style.display = "block";
+
 
 // Criar uma entrada única para esse visitante
 const myConnection = usersOnlineRef.push(true);
@@ -184,7 +177,7 @@ usersOnlineRef.on("value", snapshot => {
   if (snapshot.exists()) {
     count = Object.keys(snapshot.val()).length;
   }
-  if (isAdmin && onlineCounterEl) {
+  if (onlineCounterEl) {
     onlineCounterEl.style.display = "block"; // garante visível
     onlineCounterEl.textContent = `👀 ${count} pessoas online`;
   }
@@ -192,7 +185,7 @@ usersOnlineRef.on("value", snapshot => {
     const locationRef = db.ref("tracker/location");
 
     // Mapa
-    const map = L.map('map').setView([-23.55, -46.63], 12);
+    const map = L.map('map').setView([-23.55, -46.63], 18);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
     // Ícone fretado
