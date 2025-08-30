@@ -207,9 +207,6 @@ function updateDistance() {
     const busLatLng = busMarker.getLatLng();
     const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng); // em metros
 
-    const correctionFactor = 1.5; 
-    distance = distance * correctionFactor;
-
     let distanceText = "";
     if(distance < 1000){
       distanceText = `${Math.round(distance)} metros`;
@@ -229,7 +226,7 @@ function updateDistance() {
       timeText = `${h}h ${m}min`;
     }
 
-    document.getElementById("statusMsg").textContent = `Distância do fretado: ${distanceText} | (Estimativa: ${timeText})`;
+    document.getElementById("statusMsg").textContent = `Distância do fretado: ${distanceText} (~${timeText})`;
   }
 }
 
