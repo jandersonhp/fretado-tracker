@@ -219,7 +219,7 @@ usersOnlineRef.on("value", snapshot => {
       lastUserPos = { lat,lng };
       if(!userMarker){
         userMarker = L.marker([lat,lng], {
-          icon: L.Icon({ className:'', iconUrl:'/assets/placeholder.png', iconSize:[40,40], iconAnchor:[20,40] })
+          icon: L.icon({ iconUrl:'assets/placeholder.png', iconSize:[40,40], iconAnchor:[20,40] })
         }).addTo(map).bindPopup("Você está aqui");
       } else { userMarker.setLatLng([lat,lng]); }
       updateDistance();
