@@ -184,8 +184,8 @@ usersOnlineRef.on("value", snapshot => {
 });
     const locationRef = db.ref("tracker/location");
 
-    // Mapa
-    const map = L.map('map').setView([-23.55, -46.63], 18);
+    // Mapa-23.528201996667338, -46.77596175010479
+    const map = L.map('map').setView([-23.5284, -46.7758], 18);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
     // Ícone fretado
@@ -264,10 +264,10 @@ usersOnlineRef.on("value", snapshot => {
 
     // Botões foco
     document.getElementById("btnUser").addEventListener("click", () => {
-      if(userMarker) map.setView(userMarker.getLatLng(),15);
+      if(userMarker) map.setView(userMarker.getLatLng(),18);
     });
     document.getElementById("btnFretado").addEventListener("click", () => {
-      if(busMarker) map.setView(busMarker.getLatLng(),15);
+      if(busMarker) map.setView(busMarker.getLatLng(),18);
     });
 
   </script>
