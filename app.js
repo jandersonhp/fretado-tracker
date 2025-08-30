@@ -17,6 +17,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const usersOnlineRef = db.ref("usersOnline");
+const adminActiveRef = db.ref("tracker/adminActive");
 
 const onlineCounterEl = document.getElementById("onlineCounter");
 
@@ -87,25 +88,43 @@ locationRef.on("value", snapshot => {
   }
 });
 
-// Botão admin
+// Botão admin com lock
 let watchId = null;
-toggleBtn.addEventListener("click", () => {
+toggleBtn.addEventListener("click", async () => {
   if(watchId){
+    // Para rastreamento
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
     locationRef.remove();
-    path = [];
-    polyline.setLatLngs(path);
+    polyline.setLatLngs([]);
     toggleBtn.textContent = "Iniciar Rastreamento";
     toggleBtn.classList.remove("active");
+
+    // 🔹 Limpa admin ativo
+    adminActiveRef.remove();
   } else {
+    // 🔹 Checa se já existe outro admin ativo
+    const snapshot = await adminActiveRef.get();
+    if(snapshot.exists()){
+      alert("Rastreamento em curso.");
+      return;
+    }
+
+    // 🔹 Grava admin ativo (timestamp serve como UID único)
+    const uid = Date.now().toString(); 
+    adminActiveRef.set(uid);
+    adminActiveRef.onDisconnect().remove(); // garante limpeza se fechar a aba
+
+    // Inicia rastreamento
     if(navigator.geolocation){
       watchId = navigator.geolocation.watchPosition(pos => {
         locationRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       });
       toggleBtn.textContent = "Parar Rastreamento";
       toggleBtn.classList.add("active");
-    } else { alert("Geolocalização não suportada!"); }
+    } else {
+      alert("Geolocalização não suportada!");
+    }
   }
 });
 
