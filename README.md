@@ -9,6 +9,15 @@
 
 ---
 
+## 🚀 Demo / Site
+
+Você pode acessar o site funcionando aqui:  
+[🌐 Fretado Tracker Online](https://jandersonhp.github.io/fretado-tracker/)
+
+<img src="assets/screenshot1.JPG" width="315" height="600" >
+
+---
+
 ## 🔹 Funcionalidades
 
 - 📍 Mostra a localização do fretado e do usuário em **tempo real** no mapa.
@@ -23,17 +32,6 @@
 - **HTML / CSS / JavaScript** – frontend simples e responsivo  
 - **[Leaflet](https://leafletjs.com/)** – visualização do mapa e marcador do ônibus  
 - **[Firebase Realtime Database](https://firebase.google.com/docs/database)** – armazenamento e atualização da localização  
-
-
----
-
-## 🚀 Demo / Deploy
-
-Você pode acessar o site funcionando aqui:  
-[🌐 Fretado Tracker Online](https://jandersonhp.github.io/fretado-tracker/)
-
-<img src="assets/screenshot1.JPG" width="315" height="600" >
-
 
 ---
 
