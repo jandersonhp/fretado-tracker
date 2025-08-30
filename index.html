@@ -205,8 +205,8 @@ usersOnlineRef.on("value", snapshot => {
 function updateDistance() {
   if(lastUserPos && busMarker){
     const busLatLng = busMarker.getLatLng();
-    const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng); // em metros
-
+    const correctionFactor = 1.5;
+    const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng) * correctionFactor;// em metros
     let distanceText = "";
     if(distance < 1000){
       distanceText = `${Math.round(distance)} metros`;
