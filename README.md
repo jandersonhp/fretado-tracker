@@ -32,7 +32,7 @@
 Você pode acessar o site funcionando aqui:  
 [🌐 Fretado Tracker Online](https://jandersonhp.github.io/fretado-tracker/)
 
-<img src="assets/screenshot1.JPG">
+<img src="assets/screenshot1.JPG" width="315" height="600" >
 
 
 ---
