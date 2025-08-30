@@ -1,10 +1,13 @@
 // Verifica se é admin
+
 const params = new URLSearchParams(window.location.search);
 const isAdmin = params.get("admin") === "meu123";
 const toggleBtn = document.getElementById("toggleTracking");
 if(isAdmin) toggleBtn.style.display = "block";
 
+
 // Firebase
+
 const firebaseConfig = {
   apiKey: "AIzaSyCshgPieBQ1zXGLfH_zp0nS_ab25HSTCto",
   authDomain: "fretado-tracker.firebaseapp.com",
@@ -21,7 +24,9 @@ const adminActiveRef = db.ref("tracker/adminActive");
 
 const onlineCounterEl = document.getElementById("onlineCounter");
 
+
 // Conexão online
+
 const myConnection = usersOnlineRef.push(true);
 myConnection.onDisconnect().remove();
 usersOnlineRef.on("value", snapshot => {
@@ -35,11 +40,12 @@ usersOnlineRef.on("value", snapshot => {
 
 const locationRef = db.ref("tracker/location");
 
+
 // Mapa
+
 const map = L.map('map').setView([-23.5284, -46.7758], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
-// Ícones
 const busIcon = L.icon({ iconUrl:'assets/bus-stop.png', iconSize:[40,40], iconAnchor:[20,40] });
 
 let busMarker = null;
@@ -48,6 +54,9 @@ let polyline = L.polyline(path,{ color:'blue' }).addTo(map);
 
 let userMarker = null;
 let lastUserPos = null;
+
+
+// Funções de distância
 
 function updateDistance() {
   if(lastUserPos && busMarker){
@@ -74,7 +83,9 @@ function addOrUpdateUserMarker(lat,lng){
   updateDistance();
 }
 
+
 // Atualiza fretado
+
 locationRef.on("value", snapshot => {
   const data = snapshot.val();
   if(data){
@@ -88,34 +99,53 @@ locationRef.on("value", snapshot => {
   }
 });
 
+
+// Wake Lock e Áudio silencioso
+
+let wakeLock = null;
+const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...');
+audio.loop = true;
+audio.volume = 0;
+
+async function requestWakeLock() {
+  if(!isAdmin) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    console.log('Wake Lock ativado!');
+    wakeLock.addEventListener('release', () => console.log('Wake Lock liberado!'));
+  } catch (err) {
+    console.error(`${err.name}, ${err.message}`);
+  }
+}
+
+
 // Botão admin com lock
+
 let watchId = null;
 toggleBtn.addEventListener("click", async () => {
   if(watchId){
-    // Para rastreamento
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
     locationRef.remove();
     polyline.setLatLngs([]);
     toggleBtn.textContent = "Iniciar Rastreamento";
     toggleBtn.classList.remove("active");
-
-    // 🔹 Limpa admin ativo
     adminActiveRef.remove();
   } else {
-    // 🔹 Checa se já existe outro admin ativo
     const snapshot = await adminActiveRef.get();
     if(snapshot.exists()){
       alert("Rastreamento em curso.");
       return;
     }
 
-    // 🔹 Grava admin ativo (timestamp serve como UID único)
     const uid = Date.now().toString(); 
     adminActiveRef.set(uid);
-    adminActiveRef.onDisconnect().remove(); // garante limpeza se fechar a aba
+    adminActiveRef.onDisconnect().remove();
 
-    // Inicia rastreamento
+    // Wake Lock e áudio
+    requestWakeLock();
+    audio.play().catch(() => console.log('Interação necessária para áudio'));
+
     if(navigator.geolocation){
       watchId = navigator.geolocation.watchPosition(pos => {
         locationRef.set({ lat: pos.coords.latitude, lng: pos.coords.longitude });
@@ -128,12 +158,15 @@ toggleBtn.addEventListener("click", async () => {
   }
 });
 
+
 // Geolocalização usuário
+
 if(navigator.geolocation){
   navigator.geolocation.getCurrentPosition(pos => addOrUpdateUserMarker(pos.coords.latitude,pos.coords.longitude));
   navigator.geolocation.watchPosition(pos => addOrUpdateUserMarker(pos.coords.latitude,pos.coords.longitude),
     err => console.warn(err), { enableHighAccuracy:true, maximumAge:0 });
 }
+
 
 // Botões foco
 document.getElementById("btnUser").addEventListener("click", () => {
