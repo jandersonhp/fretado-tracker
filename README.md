@@ -11,11 +11,10 @@
 
 ## 🔹 Funcionalidades
 
-- 📍 Mostra a localização do fretado em **tempo real** no mapa.  
+- 📍 Mostra a localização do fretado e do usuário em **tempo real** no mapa.
 - 🚦 Iniciar/Parar rastreamento pelo admin.  
-- 🚌 Ícone personalizado do ônibus e **trilha azul** indicando percurso percorrido.  
-- 📱 Design **responsivo**, adaptável para desktop e celular.  
-- 🔒 Controle de acesso admin via **código secreto** ou **Firebase Auth** (dependendo da versão).  
+- 🚌 Ícone personalizado do ônibus e **trilha azul** indicando percurso percorrido.
+- 📐 Mede distância / estimativa de tempo para a chegada do fretado.
 
 ---
 
@@ -33,35 +32,8 @@
 Você pode acessar o site funcionando aqui:  
 [🌐 Fretado Tracker Online](https://jandersonhp.github.io/fretado-tracker/)
 
----
+<img src="assets/screenshot1.JPG">
 
-## 🚀 Como usar
-
-1. Abra o site no navegador.
-
-2. **Admin:**  
-   - Use o link secreto `?admin=meu123` ou faça login via Firebase Auth para ativar o botão **Iniciar Rastreamento**.  
-   - Ao iniciar, sua localização será enviada para o Firebase em tempo real.
-
-3. **Usuário:**  
-   - Acesse o site normalmente para **ver a localização do fretado** no mapa.  
-   - Não é necessário login.
-
----
-
-## 🔐 Observações / Segurança
-
-- A API Key do Firebase é pública no código, mas **não permite alterar dados** se as regras de segurança estiverem configuradas corretamente.  
-- Apenas o admin pode enviar a localização.  
-- Este projeto **não é seguro para uso público sem autenticação**, recomendado para uso interno.  
-
----
-
-## 🗺 Layout
-
-- Mapa centralizado, responsivo e adaptado para diferentes tamanhos de tela.  
-- Botão de iniciar/parar rastreamento visível apenas para o admin.  
-- Legenda com ícone de ônibus e explicação do trajeto.
 
 ---
 
@@ -75,13 +47,10 @@ Você pode acessar o site funcionando aqui:
 ---
 
 
----
-
 ## 📌 Referências
 
 - [Leaflet Documentation](https://leafletjs.com/)  
 - [Firebase Realtime Database Docs](https://firebase.google.com/docs/database)  
-- [Firebase Auth Docs](https://firebase.google.com/docs/auth)
 
 ---
 
