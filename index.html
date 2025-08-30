@@ -207,6 +207,9 @@ function updateDistance() {
     const busLatLng = busMarker.getLatLng();
     const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng); // em metros
 
+    const correctionFactor = 1.5; 
+    distance = distance * correctionFactor;
+
     let distanceText = "";
     if(distance < 1000){
       distanceText = `${Math.round(distance)} metros`;
@@ -215,7 +218,7 @@ function updateDistance() {
     }
 
     // Estimativa de tempo (velocidade média do fretado em km/h)
-    const averageSpeedKmh = 40;
+    const averageSpeedKmh = 13;
     const timeHours = (distance/1000) / averageSpeedKmh;
     let timeText = "";
     if(timeHours < 1){
@@ -226,7 +229,7 @@ function updateDistance() {
       timeText = `${h}h ${m}min`;
     }
 
-    document.getElementById("statusMsg").textContent = `Distância do fretado: ${distanceText} (~${timeText})`;
+    document.getElementById("statusMsg").textContent = `Distância do fretado: ${distanceText} | (Estimativa: ${timeText})`;
   }
 }
 
