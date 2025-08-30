@@ -187,7 +187,7 @@ usersOnlineRef.on("value", snapshot => {
     const locationRef = db.ref("tracker/location");
 
     // Mapa-23.528201996667338, -46.77596175010479
-    const map = L.map('map').setView([-23.5284, -46.7758], 18);
+    const map = L.map('map').setView([-23.5284, -46.7758], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
     // Ícone fretado
@@ -202,13 +202,34 @@ usersOnlineRef.on("value", snapshot => {
     let userMarker = null;
     let lastUserPos = null;
 
-    function updateDistance() {
-      if(lastUserPos && busMarker){
-        const busLatLng = busMarker.getLatLng();
-        const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng);
-        document.getElementById("statusMsg").textContent = `Distância do fretado: ${Math.round(distance)} metros`;
-      }
+function updateDistance() {
+  if(lastUserPos && busMarker){
+    const busLatLng = busMarker.getLatLng();
+    const distance = map.distance([lastUserPos.lat,lastUserPos.lng], busLatLng); // em metros
+
+    let distanceText = "";
+    if(distance < 1000){
+      distanceText = `${Math.round(distance)} metros`;
+    } else {
+      distanceText = `${(distance/1000).toFixed(1)} km`;
     }
+
+    // Estimativa de tempo (velocidade média do fretado em km/h)
+    const averageSpeedKmh = 40;
+    const timeHours = (distance/1000) / averageSpeedKmh;
+    let timeText = "";
+    if(timeHours < 1){
+      timeText = `${Math.round(timeHours*60)} min`;
+    } else {
+      const h = Math.floor(timeHours);
+      const m = Math.round((timeHours - h)*60);
+      timeText = `${h}h ${m}min`;
+    }
+
+    document.getElementById("statusMsg").textContent = `Distância do fretado: ${distanceText} (~${timeText})`;
+  }
+}
+
 
     function addOrUpdateUserMarker(lat,lng){
       lastUserPos = { lat,lng };
@@ -266,10 +287,10 @@ usersOnlineRef.on("value", snapshot => {
 
     // Botões foco
     document.getElementById("btnUser").addEventListener("click", () => {
-      if(userMarker) map.setView(userMarker.getLatLng(),12);
+      if(userMarker) map.setView(userMarker.getLatLng(),16);
     });
     document.getElementById("btnFretado").addEventListener("click", () => {
-      if(busMarker) map.setView(busMarker.getLatLng(),12);
+      if(busMarker) map.setView(busMarker.getLatLng(),16);
     });
 
   </script>
