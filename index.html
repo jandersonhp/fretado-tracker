@@ -122,8 +122,8 @@
     <button id="btnFretado" class="controlBtn">Posição do Fretado</button>
 
     <div class="legend">
-      <img src="/assets/bus-stop.png" width="20" height="20"> Fretado → Posição Atual<br>
-      <img src="/assets/placeholder.png" width="20" height="20"> Usuário → Sua Posição<br>
+      <img src="assets/bus-stop.png" width="20" height="20"> Fretado → Posição Atual<br>
+      <img src="assets/placeholder.png" width="20" height="20"> Usuário → Sua Posição<br>
       🔵 Linha azul → Trajeto Percorrido
     </div>
   </div>
@@ -196,7 +196,9 @@ usersOnlineRef.on("value", snapshot => {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
     // Ícone fretado
-    const busIcon = L.icon({ iconUrl:'assets/bus-stop.png', iconSize:[40,40], iconAnchor:[20,40] });
+    const busIcon = L.icon({ iconUrl:'assets/bus-stop.png', iconSize:[40,40], iconAnchor:[20,40]
+      
+     });
 
     let busMarker = null;
     let path = [];
@@ -217,7 +219,7 @@ usersOnlineRef.on("value", snapshot => {
       lastUserPos = { lat,lng };
       if(!userMarker){
         userMarker = L.marker([lat,lng], {
-          icon: L.divIcon({ className:'', url:'/assets/placeholder.png', iconSize:[20,20], iconAnchor:[10,10] })
+          icon: L.divIcon({ className:'', iconUrl:'/assets/placeholder.png', iconSize:[40,40], iconAnchor:[20,40] })
         }).addTo(map).bindPopup("Você está aqui");
       } else { userMarker.setLatLng([lat,lng]); }
       updateDistance();
