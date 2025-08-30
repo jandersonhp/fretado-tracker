@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Fretado Tracker</title>
   <style>
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -123,7 +124,7 @@
 
   <div id="statusMsg">Fretado não está transmitindo</div>
 
-  <footer>© 2025 Janderson Duarte – <a href="https://github.com/jandersonhp/" target="_blank">GitHub</a></footer>
+
   <footer><div id="onlineCounter" style="
   position:footer; 
   top: 60px; 
@@ -132,10 +133,11 @@
   padding:6px 10px; 
   border-radius:8px; 
   box-shadow:0 0 6px rgba(0,0,0,0.3); 
-  font-size:14px; 
+  font-size:25px; 
   display:none;">
   👀 0 pessoas online
     </div></footer>
+    <footer><div id="credits" style="font-size: 20px">©2025 Janderson Duarte – <a href="https://github.com/jandersonhp/" target="_blank">GitHub</a></footer></div>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -264,10 +266,10 @@ usersOnlineRef.on("value", snapshot => {
 
     // Botões foco
     document.getElementById("btnUser").addEventListener("click", () => {
-      if(userMarker) map.setView(userMarker.getLatLng(),18);
+      if(userMarker) map.setView(userMarker.getLatLng(),12);
     });
     document.getElementById("btnFretado").addEventListener("click", () => {
-      if(busMarker) map.setView(busMarker.getLatLng(),18);
+      if(busMarker) map.setView(busMarker.getLatLng(),12);
     });
 
   </script>
